@@ -4,9 +4,9 @@
 	<head>
 		<meta charset="utf-8">
 
-		<title>Paris WebGL - prototype of PBR</title>
+		<title>Paris WebGL - PBR envtools</title>
 
-		<meta name="description" content="experience of implementing PBR with webgl">
+		<meta name="description" content="tools to generate PBR prefiltered environment">
 		<meta name="author" content="Cedric Pinson">
 
 		<meta name="apple-mobile-web-app-capable" content="yes" />
@@ -31,6 +31,7 @@
 			}
 		</script>
 
+		<script src="js/jquery-2.1.1.js"></script>
 		<!--[if lt IE 9]>
 		<script src="lib/js/html5shiv.js"></script>
 		<![endif]-->
@@ -42,312 +43,453 @@
 
 			<!-- Any section element inside of this container is displayed as a slide -->
 			<div class="slides">
-				<section>
-					<h1>PBR prototype</h1>
-					<h3>sketchfab demo at siggraph 2014</h3>
-					<p>
-						<small>by Cedric Pinson / <a href="http://twitter.com/trigrou">@trigrou</a> <br> <a href="http://twitter.com/sketchfab">@sketchfab</a> </small>
-					</p>
-				</section>
+			  <section>
+			    <h1>PBR envtools</h1>
+			    <!-- <h3>in production at sketchfab</h3> -->
+			    <p>
+			      <small>by Cedric Pinson / <a href="http://twitter.com/trigrou">@trigrou</a> <br> <a href="http://twitter.com/sketchfab">@sketchfab</a> </small>
+			    </p>
+			    <aside class="notes">
+                              <ul>
+                                <li>Cedric Pinson, Developer OpenGL/WebGL.</li>
+                                <li>Je suis co fondateur et CTO de sketchfab</li>
 
-				<section>
-					<h2>Light <a href="http://blog.selfshadow.com/publications/s2014-shading-course/hoffman/s2014_pbs_physics_math_slides.pdf">[5]</a></h2>
-					<p>Micro geometry</p>
-					<img width="980" src="images/microgeometry.jpg" alt="microgeometry">
-				</section>
+                                <li>Je vais presenté les outils qu'on utilise pour le rendu PBR</li>
+                                <li>faire une update par rapport a mon talk de l'année derniere</li>
+                              </ul>
+			    </aside>
 
-				<section>
-					<h2>Surface rough</h2>
-					<img width="980" src="images/blurry.jpg" alt="blurry">
-				</section>
+			  </section>
 
-				<section>
-					<h2>Surface plane</h2>
-					<img width="980" src="images/mirror.jpg" alt="mirror">
-				</section>
+			  <section>
+			    <h2>Light <a href="http://blog.selfshadow.com/publications/s2014-shading-course/hoffman/s2014_pbs_physics_math_slides.pdf">[1]</a></h2>
+			    <p>Micro geometry</p>
+			    <img width="980" src="images/microgeometry.jpg" alt="microgeometry">
 
-				<section>
-					<h2>Light interaction</h2>
-                                        <p>Reflection</p>
-                                        <p>Refraction</p>
-				</section>
+			    <aside class="notes">
+                              <ul>
+                                <li>Comment la lumiere interagit avec la matiere ?</li>
+                                <li>quasi toutes les surfaces on des micro geomtry</li>
+                                <li>ce sont des micro bosse plus grandes qu'une longeur d'onde de lumiere, mais trop petit pour etre visible</li>
+                                <li>chaque point refletes et refracte la lumiere dans differentes directions</li>
+                                <li>L'apparence de la surface est un agregat de toutes les directions des reflection/refractions</li>
+                              </ul>
+			    </aside>
 
-                                <section>
-					<h2>Metal</h2>
-                                        <p>Light is reflected</p>
-                                        <p>Refracted light is absorbed</p>
-					<img width="850" src="images/metal.jpg" alt="mirror">
-				</section>
+			  </section>
 
-				<section>
-					<h2>Non Metal</h2>
-                                        <p>Light is reflected</p>
-                                        <p>Light is refracted</p>
-					<img width="780" src="images/nonmetal.jpg" alt="non metal">
-				</section>
+			  <section>
+			    <h2>Surface rough</h2>
+			    <img width="980" src="images/blurry.jpg" alt="blurry">
 
-				<section>
-					<h2>Simplification</h2>
-					<p>Diffuse / Specular</p>
-					<img width="780" src="images/simplified.jpg" alt="simplified">
-				</section>
+			    <aside class="notes">
+                              <ul>
+                                <li>Moins une surface est lisse et plus la reflection sera flou</li>
+                              </ul>
+			    </aside>
 
-				<section>
-					<h2>Microfacet Specular BRDF</h2>
-					<img width="780" src="images/brdf.jpg" alt="simplified">
-				</section>
+			  </section>
 
-				<section>
-					<h2>Specular <a href="http://blog.selfshadow.com/publications/s2014-shading-course/hoffman/s2014_pbs_physics_math_slides.pdf">[5]</a></h2>
-                                        <p>F: Fresnel (F_Schlick)</p>
-                                        <p>D: Normal distribution function (D_GGX)</p>
-                                        <p>G: Geometry function (G_SmithGGX)</p>
-				</section>
+			  <section>
+			    <h2>Surface plane</h2>
+			    <img width="980" src="images/mirror.jpg" alt="mirror">
+			    <aside class="notes">
+                              <ul>
+                                <li>Plus c'est lisse et plus la reflection est nette, comme un miroir</li>
+                              </ul>
+			    </aside>
 
-				<section>
-					<h2>Diffuse</h2>
-					<img width="780" src="images/lambert.jpg" alt="simplified">
-				</section>
+			  </section>
 
-				<section>
-					<h2>PBR components</h2>
-					<ul>
-                                                <li>Materials (Albedo/Roughness/Metalness)</li>
-						<li>HDR Environments</li>
-						<li style="text-decoration: line-through">Area lights</li>
-                                                <li style="text-decoration: line-through">Camera</li>
-                                                <li>Use reference <a href="http://www.mitsuba-renderer.org/">mitsuba [5]</a></li>
-					</ul>
-				</section>
+			  <section>
+			    <h2>Approximation</h2>
+			    <p>Diffuse / Specular</p>
+			    <img width="780" src="images/simplified.jpg" alt="simplified">
 
-				<section>
-					<h2>Environment</h2>
-                                        <p>Use enfironment as lightsource</p>
-                                        <img width="980" src="images/HDR_112_River_Road_2_Bg2.jpg" alt="environment">
-					<small>image from hdri-hub.com <a href="http://www.hdri-hub.com/hdrishop/freesamples/freehdri/item/115-hdr-112-river-road-free">[7]</a></small>
-				</section>
+			    <aside class="notes">
+                              <ul>
+                                <li>Expliquer la refraction</li>
+                                <li>Diffuse correspond au resultat de la refraction/scatering/absorption</li>
+                                <li>Specular la reflection</li>
+                              </ul>
+			    </aside>
 
-				<section>
-                                        <h2>Diffuse</h2>
-                                        <p>precompute irradiance <a href="http://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/">[1]</a></p>
-                                        <p>cubemap / spherical harmonics</p>
-                                        <img width="980" src="images/HDR_112_River_Road_2_Env2.jpg" alt="environment">
-					<small>image from hdri-hub.com <a href="http://www.hdri-hub.com/hdrishop/freesamples/freehdri/item/115-hdr-112-river-road-free">[7]</a></small>
-				</section>
+			  </section>
 
-				<section>
-                                        <h2>Irradiance</h2>
-                                        <img width="580" src="images/Irradiance.png" alt="irradiance">
-				</section>
+			  <section>
+			    <h2>Microfacet Specular BRDF <a href="http://blog.selfshadow.com/publications/s2014-shading-course/hoffman/s2014_pbs_physics_math_slides.pdf">[1]</a></h2>
+			    <img width="780" src="images/brdf.jpg" alt="simplified">
 
-				<section>
-                                  <h2>Pseudo code Diffuse</h2>
+			    <aside class="notes">
+                              <ul>
+                                <li>F, Fresnel factor</li>
+                                <li>G, Geometry function</li>
+                                <li>D, Normal distribution function</li>
+                                <li>C'est une parti de cette formule qu'on va precalculer dans les outils d'environment</li>
+                                <li>Allez voir les liens pour le detail</li>
+                              </ul>
+			    </aside>
 
-					<pre><code data-trim contenteditable>
+			  </section>
 
-for ( int i = 0; i < nbSamples; i++ ) {
+			  <section>
+			    <h2>Diffuse <a href="https://seblagarde.wordpress.com/2012/01/08/pi-or-not-to-pi-in-game-lighting-equation/" >[2]</a></h2>
+			    <img width="780" src="images/lambert.jpg" alt="simplified">
+			    <aside class="notes">
+                              <ul>
+                                <li>La partie diffuse va aussi etre precalculer</li>
+                                <li>Disney Brent Burley</li>
+                                <li>Oren nayar</li>
+                                <li>De plus en plus ya un desir d'integrer un model qui prend en compte la roughness dans le brdf de diffuse</li>
+                              </ul>
+			    </aside>
 
-    vec2 u       =  getSample(i);
-    vec3 h       =  importanceSampleCos(u);
-    vec3 l       =  h;
-    vec3 dir     =  iblTransform * l;
-    vec3 env     =  textureCubeLod( ibl, dir, 0.0 );
-    contrib      += env / PI;
+			  </section>
 
-}
-					</code></pre>
-                                </section>
+			  <section>
+			    <h2>Image Based Lighting</h2>
+                            <p>Use enfironment as lightsource</p>
+                            <img width="980" src="images/HDR_112_River_Road_2_Bg2.jpg" alt="environment">
+			    <small>image from hdri-hub.com <a href="http://www.hdri-hub.com/hdrishop/freesamples/freehdri/item/115-hdr-112-river-road-free">[3]</a></small>
 
+			    <aside class="notes">
+                              <ul>
+                                <li>En general on integre le BRDF sur la lumiere qui vient de toutes les directions</li>
+                                <li>L'environment est comme un cache de la radiance qui vient de toutes les directions</li>
+                                <li>Dans les jeux on va pre/computer des environments localisé qui vont etre utilisé a la place de l'environment global</li>
+                                <li>Permet d'avoir des reflection localisé</li>
+                              </ul>
+			    </aside>
 
+                          </section>
 
-				<section>
-                                        <h2>Specular</h2>
-                                        <p>prefilter roughness or more <a href="http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf">[2]</a></p>
-                                        <p>importance sampling <a href="http://http.developer.nvidia.com/GPUGems3/gpugems3_ch20.html">[3]</a></p>
-                                        <img width="980" src="images/HDR_112_River_Road_2_Bg2.jpg" alt="environment">
-					<small>image from hdri-hub.com <a href="http://www.hdri-hub.com/hdrishop/freesamples/freehdri/item/115-hdr-112-river-road-free">[7]</a></small>
-				</section>
+			  <section>
+			    <h2>Prefiltering Environment</h2>
+			    <ul>
+                              <li>Mitsuba <a href="http://www.mitsuba-renderer.org/">[4]</a> for reference</li>
+                              <li>Diffuse, Cubemap / SH - <b>cubemapgen</b> <a href="http://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/">[5]</a></li>
+                              <li>Specular, Cubemap - <b>UE4</b> <a href="http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf">[6]</a>, <b>Frostbite</b> <a href="http://www.frostbite.com/2014/11/moving-frostbite-to-pbr/">[7]</a>
+                              </li>
 
-				<section>
-                                  <h2>Pseudo code Specular</h2>
-					<pre><code data-trim contenteditable>
+                            </ul>
 
-for ( int i = 0; i < nbSamples; i++ ) {
+			    <aside class="notes">
+                              <ul>
+                                <li>Le prefiltering, introduit par Brian Karis, ca permet d'integrer le BRDF sur une cubemap et une texture de lookup</li>
+                                <li>Splitté en 2 fonctions</li>
+                                <li>Lod roughness</li>
+                                <li>Specular, c'est precalculer un environment pour un niveau de roughness donné</li>
+                                <li>Diffuse (lambert), c'est l'integration de l'hemisphere en une point</li>
+                                <li>Diffuse, brdf avec roughness</li>
+                                <li>Utiliser mitsuba pour faire des tests de rendu</li>
+                                <li>a chaque point on regarde la roughness, et on choisie dans le bon niveau de LOD</li>
+                                <li>11 Min</li>
+                              </ul>
+			    </aside>
 
-    vec2  u       =  getSample(i);
-    vec3  h       =  importanceSampleGGX(u);
-    vec3  l       =  reflect(v, h);
-    float g       =  g_smithGGX( roughness, NoV, NoL);
-    vec3  f       =  f_schlick( f0, NoH);
-    float d       =  d_ggx( NoH, roughness);
-    vec3  dir     =  iblTransform * l;
-    vec3  env     =  textureCubeLod( ibl, dir, 0.0 );
-    contrib      +=  env * g * f * d / ( 4.0 * NoV * NoL );
+			  </section>
 
-}
-					</code></pre>
-                                </section>
-
-
-				<section>
-                                  <h2>Importance sampling</h2>
-                                  <p>Use texture lod as approximation</p>
-                                  <img width="980" src="images/Importance-sampling.png" alt="importance sampling">
-				</section>
-
-				<section>
-					<h2>Implementation</h2>
-					<ul>
-                                          <li>Texture lod is the minimum tool to store data</li>
-                                          <li>hdr is also a requirement</li>
-					</ul>
-                                </section>
-
-				<section>
-					<h2>WebGL Stats <a href="http://webglstats.com/">[4]</a></h2>
-                                        <img width="980" src="images/webglstats_float.jpg" alt="stats floating points">
-				</section>
-
-				<section>
-					<h2>WebGL Stats <a href="http://webglstats.com/">[4]</a></h2>
-                                        <img width="980" src="images/webglstats_2.jpg" alt="stats floating points">
-				</section>
-
-				<section>
-					<h2>Issues</h2>
-					<ul>
-                                          <li>Texture lod extension is not well supported</li>
-                                          <li>Float tetxure extension is not 100% supported</li>
-					</ul>
-				</section>
-
-				<section>
-					<h2>Float texture issue</h2>
-                                        <p>Need to use something like RGBE <a href="http://en.wikipedia.org/wiki/RGBE_image_format">[8]</a></p>
-                                        <p>Need to do trilinear manually</p>
-				</section>
-
-				<section>
-					<h2>Texture lod issue</h2>
-                                        <p>Can't use once cubemap</p>
-                                        <p>Can use multi cubemap <a href="http://www.alexandre-pestana.com/webgl/PBRViewer.html">[9]</a></p>
-					<pre><code data-trim contenteditable>
-// Ok, this is ugly, but there is an explanation ...
-vec3 ComputeEnvColor(float roughness, vec3 refl)
-{
-    float a = roughness * roughness * 6.0;
-    if ( a < 1.0)
-        return mix(textureCube(envMap0, refl).rgb, textureCube(envMap1, refl).rgb, a);
-
-    if ( a < 2.0)
-        return mix(textureCube(envMap1, refl).rgb, textureCube(envMap2, refl).rgb, a - 1.0);
-
-    if ( a < 3.0)
-        return mix(textureCube(envMap2, refl).rgb, textureCube(envMap3, refl).rgb, a - 2.0);
-
-    if ( a < 4.0)
-        return mix(textureCube(envMap3, refl).rgb, textureCube(envMap4, refl).rgb, a - 3.0);
-
-    if ( a < 5.0)
-        return mix(textureCube(envMap4, refl).rgb, textureCube(envMap5, refl).rgb, a - 4.0);
-
-    return textureCube(envMap5, refl).rgb;
-}
-                                        </code></pre>
-					<small>code from alexandre pestana <a href="http://www.alexandre-pestana.com/webgl/PBRViewer.html">[9]</a></small>
-				</section>
-
-				<section>
-                                  <h2>Cubemap seams</h2>
-                                  <p>No ARB_seamless_cube_map extension <a href="https://www.opengl.org/registry/specs/ARB/seamless_cube_map.txt">[10]</a></p>
-                                  <p>AMD cubemap gen has code to fixup <a href="http://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/">[1]</a></p>
-                                  <img width="740" src="images/seams.jpg" alt="seams issue">
-
-                                  <p><small>image from Ignacio Castaño post <a href="http://the-witness.net/news/2012/02/seamless-cube-map-filtering/">[12]</a></small></p>
-				</section>
-
-				<section>
-					<h2>Panorama alternative</h2>
-                                        <p>Can use panorama with lod inline</p>
-                                        <img width="540" src="images/panorama_inline.jpg" alt="environment inline">
-				</section>
-
-				<section>
-					<h2>Panorama issue</h2>
-                                        <p>Panorama suffer from pole low resolution</p>
-                                        <img width="540" src="images/pole_issue.jpg" alt="panorama pole issue">
-				</section>
-
-				<section>
-					<h2>Virtualize UV for lod</h2>
-					<pre><code data-trim contenteditable>
-vec4 computeUVForMipmap( const in float level, const in vec2 uv, const in vec2 size, const in float maxLOD ) {
-    float widthForLevel = pow( 2.0, maxLOD-level);
-
-    // the height locally for the level in pixel
-    vec2 sizeForLevel = vec2( widthForLevel, widthForLevel - 2.0 ); // -2.0 avoid bleeding on the top
-    // globally the texture is square so width = height for texture size
-    float globalOffsetVInTexel = size.x - sizeForLevel.x; // in texel
-
-    float oneOnSizeX = 1.0 / size.x;
-
-    // we will need to transform our original uv to the mipmap level space
-    vec2 ratio = sizeForLevel * oneOnSizeX;
-
-    // u = u * ratioU
-    // v = v * ratioV + offsetY / height
-    vec2 uvGlobal = uv * ratio;
-
-    float globalOffsetV = globalOffsetVInTexel * oneOnSizeX;
-    uvGlobal.y += globalOffsetV;
-
-    // zw contains the max box of the local mip level
-    return vec4( uvGlobal.x, uvGlobal.y, ratio.x, ratio.y + globalOffsetV );
-}
-                                        </code></pre>
-				</section>
-
-				<section>
-					<h2>Demo</h2>
-                                        <p>Panorama example</p>
-                                        <p>Sketchfab siggraph prototype <a href="https://labs.sketchfab.com/siggraph2014/">[11]</a></small></p>
-				</section>
+			  <section>
+			    <h2>WebGL Stats <a href="http://webglstats.com/">[8]</a></h2>
+                            <img width="980" src="images/webglstats_2.jpg" alt="stats texture lod 2014">
+                            <img width="480" src="images/texture_lod.jpg" alt="stats texture lod 2015">
+			  </section>
 
 
-				<section>
-				  <h2>Resources</h2>
-                                  <small><a href="http://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/">1 Sebastien Lagarde, AMD Cubemapgen for PBR</a></small><br>
+			  <section>
+                            <h2>Cubemap seams</h2>
+                            <p>No <a href="https://www.opengl.org/registry/specs/ARB/seamless_cube_map.txt">ARB_seamless_cube_map</a> extension</p>
+                            <p>AMD cubemap gen has code to fixup <a href="http://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/">[5]</a></p>
+                            <img width="740" src="images/seams.jpg" alt="seams issue">
 
-                                  <small><a href="http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf">2 Brian Karis, Epic UE4 shading</a></small><br>
-                                  <small><a href="http://http.developer.nvidia.com/GPUGems3/gpugems3_ch20.html">3 GPU based importance sampling</a></small><br>
-                                  <small><a href="http://webglstats.com/">4 WebGL stats</a></small><br>
+                            <p><small>image from Ignacio Castaño post <a href="http://the-witness.net/news/2012/02/seamless-cube-map-filtering/">[9]</a></small></p>
+			  </section>
 
-                                  <small><a href="http://blog.selfshadow.com/publications/s2014-shading-course/hoffman/s2014_pbs_physics_math_slides.pdf">5 Natty Hoffman, Physics and Math of Shading</a></small><br>
+			  <section>
+			    <h2>Panorama lod fallback</h2>
+                            <img width="540" src="images/panorama_inline.jpg" alt="environment inline">
+                            <p>better alternative Octahedral projection <a href="https://webglinsights.github.io/downloads/WebGL-Insights-Chapter-16.pdf">[10]</a></p>
 
-                                  <small><a href="http://www.marmoset.co/toolbag/learn/pbr-theory">6 PBR basics from marmoset</a></small><br>
+			    <aside class="notes">
+                              <ul>
+                                <li>besoin de shifter les uvs en fonction du lod</li>
+                                <li>slower than cubemap access</li>
+                                <li>d'autre method, jeff russel webgl insight</li>
+                              </ul>
+			    </aside>
 
-                                  <small><a href="http://www.hdri-hub.com">7 HDR environment hdri-hub.com</a></small><br>
-                                  <small><a href="http://en.wikipedia.org/wiki/RGBE_image_format">8 HDR (RGBE) file format</a></small><br>
-                                  <small><a href="http://www.alexandre-pestana.com/webgl/PBRViewer.html">9 Alexandre Pestana, PBR sample in webgl</a></small><br>
-                                  <small><a href="https://www.opengl.org/registry/specs/ARB/seamless_cube_map.txt">10 Seamless cube map extension</a></small><br>
+			  </section>
 
-                                  <small><a href="https://labs.sketchfab.com/siggraph2014/">11 Sketchfab PBR prototype</a></small><br>
-                                  <small><a href="http://the-witness.net/news/2012/02/seamless-cube-map-filtering/">12 Ignacio Castaño, post about cubemap seams</a></small><br>
-                                  <small><a href="http://blog.selfshadow.com/publications/s2013-shading-course/">13 Siggraph 2013</a></small><br>
-                                  <small><a href="http://blog.selfshadow.com/publications/s2014-shading-course/">14 Siggraph 2014</a></small><br>
-                                  <small><a href="http://www.pbrt.org/">15 PBR from theory to implementation</a></small><br>
-                                  <small><a href="http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html">16 Hammersley importance sampling</a></small><br>
-                                  <small><a href="http://www.mitsuba-renderer.org/">17 Mitsuba PBR renderer</a></small><br>
+			  <section>
+			    <h2>Envtools <a href="https://github.com/cedricpinson/envtools">[11]</a></h2>
+                            <ul>
+                              <li>Spherical Harmonics for diffuse</li>
+                              <li>Panorama and Cubemap GGX</li>
+                              <li>Environment preview</li>
+                              <li>Blurred environment background</li>
+                              <li>Color encoding (float,rgbe,rgbm,luv) </li>
+                              <li>MulitThread / OpenCL</li>
+                            </ul>
+
+			    <aside class="notes">
+                              <ul>
+                                <li>Slow</li>
+                                <li>Sample count</li>
+                                <li>5 min</li>
+                              </ul>
+			    </aside>
+
+			  </section>
 
 
+			  <section>
+			    <h2>Demo <a href="https://github.com/cedricpinson/envtools">[4]</a></h2>
+			    <aside class="notes">
+                              <ul>
+                                <li>Gold</li>
+                                <li>roughness constante, metalness [0-1]</li>
+                                <li>non metal, roughness [0-1]</li>
+                                <li>metal, roughness [0-1]</li>
 
-                                </section>
+                                <li>montrer les pb d'encoding</li>
 
-				<section>
-                                  <h2>Thank you</h2>
-				  <small>by Cedric Pinson / <a href="http://twitter.com/trigrou">@trigrou</a> <br> <a href="http://twitter.com/sketchfab">@sketchfab</a> </small>
+                                <li>cubemap 256 donne deja une bonne resolution</li>
+                                <li>montrer les differents models</li>
+                                <li>montrer les pb d'aliasing</li>
+                                <li>7 min</li>
+                              </ul>
+			    </aside>
 
-                                </section>
+			  </section>
+
+			  <section>
+			    <h2>Samples count</h2>
+                            <ul>
+                              <li>Depends on the HDR range</li>
+                              <li>Depends on roughness level</li>
+                            </ul>
+			    <aside class="notes">
+                              <ul>
+                                <li>On peut faire varier le nombre de sample</li>
+                                <li>plus le roughness est haut et plus ya besoin de sample car le lob est plus grand</li>
+                              </ul>
+			    </aside>
+			  </section>
+
+			  <section data-state="cycle-image" class="cycle-image">
+			    <h2>Samples range:1500</h2>
+                            <p>1024<br><img width="1280" src="images/samples_1024.jpeg"></p>
+                            <p>2048<br><img width="1280" src="images/samples_2048.jpeg"></p>
+                            <p>4096<br><img width="1280" src="images/samples_4096.jpeg"></p>
+                            <p>8192<br><img width="1280" src="images/samples_8192.jpeg"></p>
+                            <p>16384<br><img width="1280" src="images/samples_16384.jpeg"></p>
+                            <p>32768<br><img width="1280" src="images/samples_32768.jpeg"></p>
+                            <p>65536<br><img width="1280" src="images/samples_65536.jpeg"></p>
+
+			    <aside class="notes">
+                              <ul>
+                                <li>Enlever le soleil et les lumiere forte</li>
+                                <li>et les simulé en dehors pour eviter de les integrer dans les environments</li>
+                              </ul>
+			    </aside>
+
+                          </section>
+
+                          <section>
+                            <h2>Optimization</h2>
+                            <ul>
+                              <li>Prefiltered importance sampling <a href="http://http.developer.nvidia.com/GPUGems3/gpugems3_ch20.html">[12]</a></li>
+                              <li>Precompute all samples <a href="https://placeholderart.wordpress.com/2015/07/28/implementation-notes-runtime-environment-map-filtering-for-image-based-lighting/">[13]</a> <a href="https://twitter.com/padraichennessy"> @padraichennessy</a></li>
+                              <li>Color encoding (float/rgbe/rgbm/luv) <a href="http://realtimecollisiondetection.net/blog/?p=15">[14]</a> <a href="http://graphicrants.blogspot.fr/2009/04/rgbm-color-encoding.html">[15]</a></li>
+                            </ul>
+                          </section>
+
+                          <section>
+			    <h2>Importance Sampling <a href="http://http.developer.nvidia.com/GPUGems3/gpugems3_ch20.html">[12]</a></h2>
+                            <img width="1280" src="images/20fig06.jpg">
+                          </section>
+
+
+                          <section>
+			    <h2>Importance Sampling <a href="http://http.developer.nvidia.com/GPUGems3/gpugems3_ch20.html">[12]</a></h2>
+                            <img width="1280" src="images/20fig05.jpg">
+                          </section>
+
+                          <section data-state="cycle-image" class="cycle-image">
+                            <h2>Color Encoding</h2>
+                            <p>float<br><img width="1280" src="images/color_encoding_float.jpeg"></p>
+                            <p>rgbm<br><img width="1280" src="images/color_encoding_rgbm.jpeg"></p>
+                            <p>rgbe<br><img width="1280" src="images/color_encoding_rgbe.jpeg"></p>
+                            <p>luv<br><img width="1280" src="images/color_encoding_luv.jpeg"></p>
+			    <aside class="notes">
+                              <ul>
+                                <li>on a choisi luv pour notre context</li>
+                                <li>c'est celui qui presente le moins de bug visible</li>
+                              </ul>
+			    </aside>
+                          </section>
+
+                          <section data-state="cycle-image2" class="cycle-image">
+                            <h2>Color Encoding</h2>
+                            <p>float<br><img width="1280" src="images/color_encoding2_float.jpeg"></p>
+                            <p>rgbm<br><img width="1280" src="images/color_encoding2_rgbm.jpeg"></p>
+                            <p>rgbe<br><img width="1280" src="images/color_encoding2_rgbe.jpeg"></p>
+                            <p>luv<br><img width="1280" src="images/color_encoding2_luv.jpeg"></p>
+			    <aside class="notes">
+                              <ul>
+                                <li>on a choisi luv pour notre context</li>
+                                <li>c'est celui qui presente le moins de bug visible</li>
+                              </ul>
+			    </aside>
+                          </section>
+
+			  <section>
+			    <h2>Storage 256</h2>
+                            <div class="flex-container">
+                            <div class="flex-item">
+                              <i>Interleave</i>
+                              <table class="table">
+                                <thead>
+                                  <tr>
+                                    <th>size</th>
+                                    <th>format</th>
+                                    <th>encoding</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr>
+                                    <td>1.3M</td>
+                                    <td>panorama</td>
+                                    <td>luv</td>
+                                  </tr>
+                                  <tr>
+                                    <td>1.6M</td>
+                                    <td>panorama</td>
+                                    <td>rgbm</td>
+                                  </tr>
+                                  <tr>
+                                    <td>1.7M</td>
+                                    <td>panorama</td>
+                                    <td>rgbe</td>
+                                  </tr>
+                                  <tr>
+                                    <td>7.2M</td>
+                                    <td>panorama</td>
+                                    <td>float</td>
+                                  </tr>
+                                  <tr>
+                                    <td>1.1M</td>
+                                    <td>cubemap</td>
+                                    <td>luv</td>
+                                  </tr>
+                                  <tr>
+                                    <td>1.4M</td>
+                                    <td>cubemap</td>
+                                    <td>rgbm</td>
+                                  </tr>
+                                  <tr>
+                                    <td>1.4M</td>
+                                    <td>cubemap</td>
+                                    <td>rgbe</td>
+                                  </tr>
+                                  <tr>
+                                    <td>5.5M</td>
+                                    <td>cubemap</td>
+                                    <td>float</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                            <div class="flex-item">
+                              <i>Bitplane</i>
+                              <table class="table table-hover">
+                                <thead>
+                                  <tr>
+                                    <th>size</th>
+                                    <th>format</th>
+                                    <th>encoding</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr>
+                                    <td>687K</td>
+                                    <td>panorama</td>
+                                    <td>luv</td>
+                                  </tr>
+                                  <tr>
+                                    <td>1002K</td>
+                                    <td>panorama</td>
+                                    <td>rgbm</td>
+                                  </tr>
+                                  <tr>
+                                    <td>924K</td>
+                                    <td>panorama</td>
+                                    <td>rgbe</td>
+                                  </tr>
+                                  <tr>
+                                    <td>6.9M</td>
+                                    <td>panorama</td>
+                                    <td>float</td>
+                                  </tr>
+                                  <tr>
+                                    <td>646K</td>
+                                    <td>cubemap</td>
+                                    <td>luv</td>
+                                  </tr>
+                                  <tr>
+                                    <td>944K</td>
+                                    <td>cubemap</td>
+                                    <td>rgbm</td>
+                                  </tr>
+                                  <tr>
+                                    <td>885K</td>
+                                    <td>cubemap</td>
+                                    <td>rgbe</td>
+                                  </tr>
+                                  <tr>
+                                    <td>5.2M</td>
+                                    <td>cubemap</td>
+                                    <td>float</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                            </div>
+
+			    <aside class="notes">
+                              <ul>
+                                <li>store bitplane instead of interleaved</li>
+                              </ul>
+			    </aside>
+
+			  </section>
+
+
+			  <section>
+			    <h2>Resources</h2>
+<small><a  href="http://blog.selfshadow.com/publications/s2014-shading-course/hoffman/s2014_pbs_physics_math_slides.pdf"> [1] Natty Hoffman, Physics and Math of Shading</a></small><br>
+<small><a  href="https://seblagarde.wordpress.com/2012/01/08/pi-or-not-to-pi-in-game-lighting-equation/"> [2] Sebastien Lagarde, PI or not to PI in game lighting equation</a></small><br>
+<small><a  href="http://www.hdri-hub.com/hdrishop/freesamples/freehdri/item/115-hdr-112-river-road-free"> [3] HDR environment hdri-hub.com</a></small><br>
+<small><a  href="http://www.mitsuba-renderer.org/"> [4] Mitsuba PBR renderer</a></small><br>
+<small><a  href="http://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/"> [5] Sebastien Lagarde, AMD Cubemapgen for PBR </a></small><br>
+<small><a  href="http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf"> [6] Brian Karis, Epic UE4 shading </a></small><br>
+<small><a  href="http://www.frostbite.com/2014/11/moving-frostbite-to-pbr/"> [7] Charles de Rousiers & Sébastian Lagarde, Moving Frostbite to PBR</a></small><br>
+<small><a  href="http://webglstats.com/"> [8] Florian Boesch, WebGL stats</a></small><br>
+<small><a  href="http://the-witness.net/news/2012/02/seamless-cube-map-filtering/"> [9] Ignacio Castaño, post about cubemap seams</a></small><br>
+<small><a  href="https://webglinsights.github.io/downloads/WebGL-Insights-Chapter-16.pdf"> [10] Jeff Russel, HDR image based lighting on the web</a></small><br>
+<small><a  href="https://github.com/cedricpinson/envtools"> [11] Cedric Pinson, envtools</a></small><br>
+<small><a  href="http://http.developer.nvidia.com/GPUGems3/gpugems3_ch20.html"> [12] GPU based importance sampling</a></small><br>
+<small><a  href="https://placeholderart.wordpress.com/2015/07/28/implementation-notes-runtime-environment-map-filtering-for-image-based-lighting"> [13] Padraic Hennessy, Runtime Environment Map Filtering for Image Based Lighting</a></small><br>
+<small><a  href="http://realtimecollisiondetection.net/blog/?p=15"> [14] Christer Ericson, Converting RGB to LogLuv in a fragment shader</a></small><br>
+<small><a  href="http://graphicrants.blogspot.fr/2009/04/rgbm-color-encoding.html"> [15] Brian Karis, RGBM color encoding</a></small><br>
+<small><a  href="https://sketchfab.com"> [16] Sketchfab</a></small><br>
+                          </section>
+
+			  <section>
+                            <h2>Thank you</h2>
+			    <small>by Cedric Pinson / <a href="http://twitter.com/trigrou">@trigrou</a> <br> <a href="http://twitter.com/sketchfab">@sketchfab</a> </small>
+
+                          </section>
 			</div>
 
 		</div>
@@ -382,6 +524,39 @@ vec4 computeUVForMipmap( const in float level, const in vec2 uv, const in vec2 s
 					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
 				]
 			});
+
+                        var startOffset = 2;
+                        var imageIndex = -1;
+
+                        var displayImage = function() {
+                           var nb = $('section.cycle-image.present p').length;
+                           imageIndex = (imageIndex + 1) % nb;
+                           $('section.cycle-image.present p').hide();
+                           var value = startOffset + imageIndex;
+                           $('section.cycle-image p:nth-child(' + value + ')').show();
+                        };
+
+
+                        var resetImage = function() {
+                           imageIndex = -1;
+                           displayImage();
+                        }
+
+
+                        if ( $('section.cycle-image.present p').length ) {
+                        resetImage();
+                        $('section.cycle-image.present p').click( displayImage );
+                        }
+
+                        var cycleImage = function() {
+                        $('section.cycle-image.present p').unbind('click');
+                        resetImage();
+                        $('section.cycle-image.present p').click( displayImage );
+                        };
+
+                        Reveal.addEventListener( 'cycle-image', cycleImage );
+                        Reveal.addEventListener( 'cycle-image2', cycleImage );
+
 
 		</script>
 

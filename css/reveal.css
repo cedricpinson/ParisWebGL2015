@@ -1876,3 +1876,23 @@ body {
 .zoomed .reveal .roll span:after {
 	visibility: hidden;
 }
+
+/***********************************
+ TRIGROU Table
+*************************************/
+
+.flex-container {
+    display: flex;
+    justify-content: space-around;
+}
+
+.flex-item {
+    font-size: 1.5em;
+    letter-spacing: -1px;
+    white-space: nowrap;
+    color: #fff;
+    width: 50%;
+    padding-left: 5%;
+    padding-right: 5%;
+    text-shadow: 0.5px 0.5px 0.5px black;
+}
